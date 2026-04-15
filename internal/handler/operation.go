@@ -40,7 +40,7 @@ type mergePDFRequest struct {
 func (h *OperationHandler) MergePDF(ctx *gofr.Context) (any, error) {
 	var req mergePDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 
 	headers := collectFileHeaders(
@@ -48,21 +48,21 @@ func (h *OperationHandler) MergePDF(ctx *gofr.Context) (any, error) {
 		req.File6, req.File7, req.File8, req.File9, req.File10,
 	)
 	if len(headers) < 2 {
-		return nil, shared.ErrInvalidInput{Message: "at least 2 PDF files are required (upload as file1, file2, ...)"}
+		return errResp(shared.ErrInvalidInput{Message: "at least 2 PDF files are required (upload as file1, file2, ...)"})
 	}
 
 	var pdfs [][]byte
 	for _, fh := range headers {
 		data, err := saveUpload(fh)
 		if err != nil {
-			return nil, err
+			return errResp(err)
 		}
 		pdfs = append(pdfs, data)
 	}
 
 	merged, err := h.svc.Merge(ctx, operation.MergeParams{PDFs: pdfs})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{
@@ -82,20 +82,20 @@ type splitPDFRequest struct {
 func (h *OperationHandler) SplitPDF(ctx *gofr.Context) (any, error) {
 	var req splitPDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.PDF == nil {
-		return nil, shared.ErrInvalidInput{Message: "pdf file is required"}
+		return errResp(shared.ErrInvalidInput{Message: "pdf file is required"})
 	}
 
 	pdfData, err := saveUpload(req.PDF)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	ranges, err := parsePageRanges(req.Ranges)
 	if err != nil {
-		return nil, shared.ErrInvalidInput{Message: err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: err.Error()})
 	}
 
 	result, err := h.svc.Split(ctx, operation.SplitParams{
@@ -103,7 +103,7 @@ func (h *OperationHandler) SplitPDF(ctx *gofr.Context) (any, error) {
 		Ranges:  ranges,
 	})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	// Single output: return directly
@@ -121,7 +121,7 @@ func (h *OperationHandler) SplitPDF(ctx *gofr.Context) (any, error) {
 	}
 	zipData, err := zipBytes(entries)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{
@@ -141,15 +141,15 @@ type compressPDFRequest struct {
 func (h *OperationHandler) CompressPDF(ctx *gofr.Context) (any, error) {
 	var req compressPDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.PDF == nil {
-		return nil, shared.ErrInvalidInput{Message: "pdf file is required"}
+		return errResp(shared.ErrInvalidInput{Message: "pdf file is required"})
 	}
 
 	pdfData, err := saveUpload(req.PDF)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	var quality int
@@ -162,7 +162,7 @@ func (h *OperationHandler) CompressPDF(ctx *gofr.Context) (any, error) {
 		ImageQuality: quality,
 	})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{
@@ -189,18 +189,18 @@ type watermarkPDFRequest struct {
 func (h *OperationHandler) WatermarkPDF(ctx *gofr.Context) (any, error) {
 	var req watermarkPDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.PDF == nil {
-		return nil, shared.ErrInvalidInput{Message: "pdf file is required"}
+		return errResp(shared.ErrInvalidInput{Message: "pdf file is required"})
 	}
 	if req.Text == "" && req.Template == "" {
-		return nil, shared.ErrInvalidInput{Message: "text or template is required"}
+		return errResp(shared.ErrInvalidInput{Message: "text or template is required"})
 	}
 
 	pdfData, err := saveUpload(req.PDF)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	params := operation.WatermarkParams{
@@ -226,7 +226,7 @@ func (h *OperationHandler) WatermarkPDF(ctx *gofr.Context) (any, error) {
 
 	watermarked, err := h.svc.Watermark(ctx, params)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{
@@ -245,20 +245,20 @@ type extractTextRequest struct {
 func (h *OperationHandler) ExtractText(ctx *gofr.Context) (any, error) {
 	var req extractTextRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.PDF == nil {
-		return nil, shared.ErrInvalidInput{Message: "pdf file is required"}
+		return errResp(shared.ErrInvalidInput{Message: "pdf file is required"})
 	}
 
 	pdfData, err := saveUpload(req.PDF)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	result, err := h.svc.ExtractText(ctx, pdfData)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return result, nil
@@ -275,18 +275,18 @@ type decryptPDFRequest struct {
 func (h *OperationHandler) DecryptPDF(ctx *gofr.Context) (any, error) {
 	var req decryptPDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.PDF == nil {
-		return nil, shared.ErrInvalidInput{Message: "pdf file is required"}
+		return errResp(shared.ErrInvalidInput{Message: "pdf file is required"})
 	}
 	if req.Password == "" {
-		return nil, shared.ErrInvalidInput{Message: "password is required"}
+		return errResp(shared.ErrInvalidInput{Message: "password is required"})
 	}
 
 	pdfData, err := saveUpload(req.PDF)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	decrypted, err := h.svc.Decrypt(ctx, operation.DecryptParams{
@@ -294,7 +294,7 @@ func (h *OperationHandler) DecryptPDF(ctx *gofr.Context) (any, error) {
 		Password: req.Password,
 	})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{

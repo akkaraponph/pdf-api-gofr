@@ -94,6 +94,17 @@ func parsePageRanges(s string) ([]operation.PageRange, error) {
 	return ranges, nil
 }
 
+// errorResponse is returned as JSON with HTTP 200 when an error occurs.
+type errorResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
+
+// errResp wraps an error into a 200-OK JSON response.
+func errResp(err error) (any, error) {
+	return errorResponse{Success: false, Error: err.Error()}, nil
+}
+
 type zipEntry struct {
 	Data []byte
 	Name string

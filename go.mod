@@ -3,7 +3,7 @@ module pdfapi
 go 1.26.2
 
 require (
-	github.com/akkaraponph/presspdf v0.51.0
+	github.com/akkaraponph/presspdf v0.52.0
 	gofr.dev v1.56.1
 )
 
@@ -105,3 +105,5 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.48.1 // indirect
 )
+
+replace github.com/akkaraponph/presspdf => /Users/akira/src/akkaraponph/presspdf

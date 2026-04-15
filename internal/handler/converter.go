@@ -31,20 +31,20 @@ type pdfToImagesRequest struct {
 func (h *ConverterHandler) PDFToImages(ctx *gofr.Context) (any, error) {
 	var req pdfToImagesRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.PDF == nil {
-		return nil, shared.ErrInvalidInput{Message: "pdf file is required"}
+		return errResp(shared.ErrInvalidInput{Message: "pdf file is required"})
 	}
 
 	pdfData, err := saveUpload(req.PDF)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	pages, err := parsePages(req.Pages)
 	if err != nil {
-		return nil, shared.ErrInvalidInput{Message: err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: err.Error()})
 	}
 
 	dpi := 300
@@ -63,7 +63,7 @@ func (h *ConverterHandler) PDFToImages(ctx *gofr.Context) (any, error) {
 		Pages:   pages,
 	})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	// Single image: return directly
@@ -81,7 +81,7 @@ func (h *ConverterHandler) PDFToImages(ctx *gofr.Context) (any, error) {
 	}
 	zipData, err := zipBytes(entries)
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{
@@ -109,7 +109,7 @@ type imagesToPDFRequest struct {
 func (h *ConverterHandler) ImagesToPDF(ctx *gofr.Context) (any, error) {
 	var req imagesToPDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 
 	headers := collectFileHeaders(
@@ -117,14 +117,14 @@ func (h *ConverterHandler) ImagesToPDF(ctx *gofr.Context) (any, error) {
 		req.Image6, req.Image7, req.Image8, req.Image9, req.Image10,
 	)
 	if len(headers) == 0 {
-		return nil, shared.ErrInvalidInput{Message: "at least one image is required (upload as image1, image2, ...)"}
+		return errResp(shared.ErrInvalidInput{Message: "at least one image is required (upload as image1, image2, ...)"})
 	}
 
 	var images []converter.ImageInput
 	for _, fh := range headers {
 		data, err := saveUpload(fh)
 		if err != nil {
-			return nil, err
+			return errResp(err)
 		}
 		images = append(images, converter.ImageInput{Data: data, Filename: fh.Filename})
 	}
@@ -135,7 +135,7 @@ func (h *ConverterHandler) ImagesToPDF(ctx *gofr.Context) (any, error) {
 		FitMode:  shared.ParseImageFitMode(req.Fit),
 	})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{

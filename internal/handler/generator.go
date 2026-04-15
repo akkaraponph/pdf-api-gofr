@@ -35,10 +35,10 @@ type htmlToPDFRequest struct {
 func (h *GeneratorHandler) HTMLToPDF(ctx *gofr.Context) (any, error) {
 	var req htmlToPDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.HTML == "" {
-		return nil, shared.ErrInvalidInput{Message: "html field is required"}
+		return errResp(shared.ErrInvalidInput{Message: "html field is required"})
 	}
 
 	pdfData, err := h.svc.HTMLToPDF(ctx, generator.HTMLToPDFParams{
@@ -51,7 +51,7 @@ func (h *GeneratorHandler) HTMLToPDF(ctx *gofr.Context) (any, error) {
 		},
 	})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{
@@ -78,10 +78,10 @@ type markdownToPDFRequest struct {
 func (h *GeneratorHandler) MarkdownToPDF(ctx *gofr.Context) (any, error) {
 	var req markdownToPDFRequest
 	if err := ctx.Bind(&req); err != nil {
-		return nil, shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()}
+		return errResp(shared.ErrInvalidInput{Message: "failed to parse request: " + err.Error()})
 	}
 	if req.Markdown == "" {
-		return nil, shared.ErrInvalidInput{Message: "markdown field is required"}
+		return errResp(shared.ErrInvalidInput{Message: "markdown field is required"})
 	}
 
 	pdfData, err := h.svc.MarkdownToPDF(ctx, generator.MarkdownToPDFParams{
@@ -95,7 +95,7 @@ func (h *GeneratorHandler) MarkdownToPDF(ctx *gofr.Context) (any, error) {
 		Bookmarks: req.Bookmarks,
 	})
 	if err != nil {
-		return nil, err
+		return errResp(err)
 	}
 
 	return response.File{
